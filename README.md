@@ -12,8 +12,10 @@ EDA leverages state-of-the-art LLM code-generation capabilities and adapts to th
 - The process including metadata generation, building the retrieval system 
 - The goal is to allow users to interact with, digest, or serve their own data on-demand without prior application development
 
-Assumption#1: The accuracy of code generation by LLMs improves with a narrowed scope of work (e.g., coding specifically for building a RAG system) and through first-hand evaluation by the user (50%->90%)
-Assumption#2: instead of building up a generalized RAG system for all the users and types of database, it’s more likely easier to generate an application on-demand given the task of user-data interaction is simple and straightforward (e.g. local Q&A, plot a figure, etc.)
+Key solution roadmap:
+Assumption #1: The accuracy and robustness of code generation from LLMs keeps improving quickly over time (SWEBench https://www.swebench.com/) 
+Assumption #2: The accuracy is further improved by narrowing the scope of work (e.g., coding specifically for building a RAG system) and the first-hand knowledge database from the owner of the data
+Assumption #3: Instead of building up a generalized RAG system for all the users and types of database, it’s more likely easier to generate an application on-demand given the task of user-data interaction is simple and straightforward (e.g. local Q&A, plot a figure, etc.)
 
 Documentation, architecture and demo are initiated – the implementation is on-going
 
