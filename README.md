@@ -16,3 +16,6 @@ Assumption#1: The accuracy of code generation by LLMs improves with a narrowed s
 Assumption#2: instead of building up a generalized RAG system for all the users and types of database, it’s more likely easier to generate an application on-demand given the task of user-data interaction is simple and straightforward (e.g. local Q&A, plot a figure, etc.)
 
 Documentation, architecture and demo are initiated – the implementation is on-going
+
+[![Watch the demo](https://img.youtube.com/vi/gd279uKtv8U/0.jpg)](https://www.youtube.com/watch?v=gd279uKtv8U)
+
