@@ -2,10 +2,9 @@
 Data analytics on-prem, Code gen on-demand
 EDA converts a user’s own data into a local on-demand agent service by leveraging the latest auto code generation capabilities of LLMs
 - Agent code is generated on the fly the first time the user interacts with the database
-- User can also serve these agents to others by standardized APIs or function callings from LLMs once the EDA is created
+- User can also serve EDA usage by standardized APIs or function callings from LLMs once an EDA project is initiated
 - No coding knowledge is required for users to build an RAG+agent system
 - In contrast to other RAG systems, the user do not uploading raw data to any online platforms
-
 
 EDA leverages state-of-the-art LLM code-generation capabilities and adapts to the user’s database type
 - Unlike cloud-based RAG systems, which require users to upload data to a cloud platform for summarization, retrieval, or other tasks, EDA keeps the process local 
