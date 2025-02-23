@@ -21,3 +21,9 @@ Documentation, architecture and demo are initiated – the implementation is on-
 
 [![Watch the demo](https://img.youtube.com/vi/gd279uKtv8U/0.jpg)](https://www.youtube.com/watch?v=gd279uKtv8U)
 
+
+Data type 
+---
+Process some sensoring data given
+User input: "here is an example of some log file data in my program "log.txt", can you help debug it?"
+EDA response: "can you provide more information about the ?"
