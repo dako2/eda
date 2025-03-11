@@ -1,3 +1,6 @@
+# MVP toolings
+- smolagents + MCP pathway
+
 # intelligent Edge Data Agent (EDA)
 EDA is an on-premises data analytics solution that leverages state-of-the-art large language model (LLM) code generation to dynamically create a local agent service. Rather than requiring users to upload raw data to cloud platforms, EDA keeps everything local, providing a privacy-preserving and efficient way to interact with and analyze data.
 
