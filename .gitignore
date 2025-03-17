@@ -1,2 +1,9 @@
-/not_upload
+/_not_upload
 .env
+/examples/data/3gpp/
+__pycache__/
+*.pyc
+*.pyo
+.cache
+*.egg-info/
+.DS_Store
