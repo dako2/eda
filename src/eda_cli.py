@@ -10,11 +10,12 @@ import yaml
 from smolagents import CodeAgent, ToolCallingAgent, LiteLLMModel
 # Assuming tools are in a 'tools' directory relative to the CLI script
 from tools.tool_rag import RAGTool
+from tools.tool_sqlite import SQLiteTool
 from tools.tool_file_writer import FileWriter
 from tools.tool_directory_analyzer import DirectoryAnalyzer
 
 # Default model
-DEFAULT_MODEL = "gemini/gemini-1.5-flash"
+DEFAULT_MODEL = "xai/grok-2-latest"
 MODEL_ENV_VAR = "EDA_MODEL"
 MODEL_API_KEY_ENV_VAR = "MODEL_API_KEY"
 RAG_CACHE_DIR = ".cache"
@@ -98,7 +99,7 @@ def run_agent(user_message):
     )
 
     eda_agent = CodeAgent(
-        tools=[RAGTool(), DirectoryAnalyzer()],
+        tools=[RAGTool(), DirectoryAnalyzer(), SQLiteTool()],
         model=model,
         name="eda_agent",
         description="explorative data agent",
@@ -106,6 +107,7 @@ def run_agent(user_message):
     )
 
     eda_agent.run(user_message)
+
     print("Agent execution completed.")
 
 def run_mcp():
