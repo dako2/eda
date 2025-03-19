@@ -3,7 +3,10 @@ pip install llama-index
 pip install llama-index-embeddings-huggingface
 """
 import os
+import datetime
+import yaml
 from smolagents import Tool
+
 from llama_index.core import (
     SimpleDirectoryReader,
     VectorStoreIndex,
@@ -14,17 +17,113 @@ from llama_index.core import (
 from llama_index.core.llms import MockLLM
 from llama_index.embeddings.huggingface import HuggingFaceEmbedding
 
-# Initialize Settings with the desired LLM and embedding model
+# ------------------------------------------------------------------------------
+# Registry utility functions
+# ------------------------------------------------------------------------------
+REGISTRY_FILE = "data_registry.yaml"
+
+def load_registry() -> list:
+    """Loads the registry from a YAML file or returns an empty list if it doesn't exist."""
+    if os.path.exists(REGISTRY_FILE):
+        with open(REGISTRY_FILE, "r") as f:
+            data = yaml.safe_load(f)
+        return data if data else []
+    return []
+
+def save_registry(registry: list):
+    """Saves the registry back to the YAML file."""
+    with open(REGISTRY_FILE, "w") as f:
+        yaml.safe_dump(registry, f)
+
+def find_registry_entry(data_directory: str, registry: list) -> dict | None:
+    """
+    Looks for a registry entry matching 'data_directory' (by absolute path).
+    Returns the entry if found, else None.
+    """
+    abs_data_dir = os.path.abspath(data_directory)
+    for entry in registry:
+        if os.path.abspath(entry.get("data_directory", "")) == abs_data_dir:
+            return entry
+    return None
+
+def update_registry_entry(
+    data_directory: str,
+    cache_file_directory: str,
+    last_data_update: float,
+    status: str = "rag_indexed",
+    data_format: str = "",
+):
+    """
+    Inserts or updates a registry entry for this data_directory. 
+    Also stores the last_data_update (timestamp in seconds).
+    """
+    registry = load_registry()
+    abs_data_dir = os.path.abspath(data_directory)
+    abs_cache_dir = abs_data_dir + "/.cache"
+
+    # Minimal new/updated entry
+    new_entry = {
+        "data_directory": abs_data_dir,
+        "cache_file_directory": abs_cache_dir,
+        "data_format": data_format,
+        "timestamp": datetime.datetime.now().isoformat(),  # When this registry entry was updated
+        "status": status,
+        "last_data_update": last_data_update,             # float -> last mod time in seconds
+        "metadata": {},  # Optionally fill with more details
+    }
+
+    updated = False
+    for i, entry in enumerate(registry):
+        if os.path.abspath(entry.get("data_directory", "")) == abs_data_dir:
+            registry[i] = new_entry
+            updated = True
+            break
+
+    if not updated:
+        registry.append(new_entry)
+
+    save_registry(registry)
+
+def get_latest_mod_time(data_directory: str) -> float:
+    """
+    Returns the most recent (max) last-modified time (in seconds) 
+    of all files under data_directory.
+    """
+    latest_time = 0.0
+    for root, _, files in os.walk(data_directory):
+        for f in files:
+            filepath = os.path.join(root, f)
+            mtime = os.path.getmtime(filepath)
+            if mtime > latest_time:
+                latest_time = mtime
+    return latest_time
+
+# ------------------------------------------------------------------------------
+# Configure LlamaIndex
+# ------------------------------------------------------------------------------
 Settings.llm = MockLLM()
 Settings.embed_model = HuggingFaceEmbedding(model_name="sentence-transformers/all-MiniLM-L6-v2")
 
+# ------------------------------------------------------------------------------
+# RAGTool with data update checks
+# ------------------------------------------------------------------------------
 class RAGTool(Tool):
+    """
+    A retrieval-augmented generation (RAG) tool that:
+      1. Checks the registry for an existing entry for 'data_dir'.
+      2. If found, uses 'cache_file_directory' for storing/loading the vector index.
+      3. Compares last-modified time of data_dir to 'last_data_update' in the registry.
+         - If raw data is newer, rebuild the vector index.
+      4. If no entry found, creates a new .cache directory, updates the registry, and builds a new index.
+      5. Then performs a similarity-based query (top_k).
+    """
     name = "rag_tool"
-    description = "A simple RAG tool that performs retrieval augmented generation on a document corpus."
+    description = "A RAG tool that queries a document corpus using a vector index, integrating with the data registry."
+
     inputs = {
         "data_dir": {
             "type": "string",
-            "description": "The directory of data to be retrieved."
+            "description": "The directory of data to be retrieved and indexed."
         },
         "question": {
             "type": "string",
@@ -32,7 +131,7 @@ class RAGTool(Tool):
         },
         "similarity_top_k": {
             "type": "string",
-            "description": "The number of top similar documents to retrieve (provided as a string to be cast to an integer)."
+            "description": "Number of top similar docs to retrieve (string -> int)."
         }
     }
     output_type = "string"
@@ -41,96 +140,70 @@ class RAGTool(Tool):
         super().__init__(**kwargs)
 
     def forward(self, data_dir: str, question: str, similarity_top_k: str) -> str:
-        self.data_dir = data_dir
-        self.llm = Settings.llm 
-        self.embed_model = Settings.embed_model
-        persist_dir = os.path.join(data_dir, '.cache/storage')
+        """
+        Main entry point for the RAG tool.
+        1. Determine the cache directory from the registry (or create it).
+        2. Check if raw data is updated (compare directory's last mod time to registry).
+        3. Load or rebuild the vector index accordingly.
+        4. Query with 'similarity_top_k' and return result text.
+        """
+        registry = load_registry()
+        entry = find_registry_entry(data_dir, registry)
 
-        # Create or load the index based on the persisted directory
-        if not os.path.exists(persist_dir) or not os.listdir(persist_dir):
-            print("Index not found, creating a new one...")
-            documents = SimpleDirectoryReader(data_dir).load_data()
-            self.index = VectorStoreIndex.from_documents(documents)
-            self.index.storage_context.persist(persist_dir=persist_dir)
-            self.save_to_mcp(data_dir)
+        # 1. Determine the relevant cache directory
+        if entry and "cache_file_directory" in entry and entry["cache_file_directory"]:
+            persist_dir = entry["cache_file_directory"]
+            print(f"Found registry entry for {data_dir}. Using cache: {persist_dir}")
         else:
-            print("Loading existing index...")
+            # No entry found, create a new .cache directory under data_dir
+            persist_dir = os.path.join(data_dir, ".cache", "storage")
+            os.makedirs(persist_dir, exist_ok=True)
+            print(f"No registry entry found for {data_dir}. Created new cache folder: {persist_dir}")
+
+        # 2. Check if raw data is updated
+        latest_data_mtime = get_latest_mod_time(data_dir)  # in seconds
+        registry_last_data_update = entry["last_data_update"] if entry else 0.0
+
+        need_rebuild = False
+        reason = ""
+
+        # If no index folder, or raw data has new modifications, we must rebuild
+        if not os.path.exists(persist_dir) or not os.listdir(persist_dir):
+            reason = "No existing index found"
+            need_rebuild = True
+        elif latest_data_mtime > registry_last_data_update:
+            reason = "Data directory has been updated"
+            need_rebuild = True
+
+        if need_rebuild:
+            print(f"[INFO] Rebuilding index because: {reason}")
+            documents = SimpleDirectoryReader(data_dir).load_data()
+            index = VectorStoreIndex.from_documents(documents)
+            index.storage_context.persist(persist_dir=persist_dir)
+
+            # Update the registry
+            update_registry_entry(
+                data_directory=data_dir,
+                cache_file_directory=persist_dir,
+                last_data_update=latest_data_mtime, 
+                status="rag_indexed"
+            )
+        else:
+            # 3. Otherwise, load the existing index
+            print(f"[INFO] Loading existing index from {persist_dir} ...")
             storage_context = StorageContext.from_defaults(persist_dir=persist_dir)
-            self.index = load_index_from_storage(storage_context)
-            
-        # Convert similarity_top_k to integer
+            index = load_index_from_storage(storage_context)
+
+        # 4. Query with top_k
         k = int(similarity_top_k)
-        query_engine = self.index.as_query_engine(similarity_top_k=k)
+        query_engine = index.as_query_engine(similarity_top_k=k)
         response = query_engine.query(question)
 
-        # Compile output with source information
+        # 5. Compile output with source info
         output = "-----\n"
         for node in response.source_nodes:
-            #source = node.node.metadata.get('source', 'Unknown Source')
             text_fmt = node.node.get_content().strip().replace("\n", " ")
             output += f"Text:\t {text_fmt}\n"
-            output += f"Metadata:\t {node.node.metadata}"
-            output += f"Score:\t {node.score:.3f}"
+            output += f"Metadata:\t {node.node.metadata}\n"
+            output += f"Score:\t {node.score:.3f}\n"
         return output
-    
-    def save_to_mcp(self, data_dir:str) -> str:
-        """Saves the RAG tool's retrieval script for standalone execution."""
-        retrieval_code = f"""
-
-import os
-from mcp.server.fastmcp import FastMCP
-from llama_index.core import SimpleDirectoryReader, VectorStoreIndex, StorageContext, load_index_from_storage, Settings
-from llama_index.core.llms import MockLLM
-from llama_index.embeddings.huggingface import HuggingFaceEmbedding
-
-# Configure LlamaIndex settings
-Settings.llm = MockLLM()
-Settings.embed_model = HuggingFaceEmbedding(model_name="sentence-transformers/all-MiniLM-L6-v2")
-
-# Instantiate the MCP server with a descriptive name
-mcp = FastMCP("RAGTool Server")
-
-# Wrap the query functionality as an MCP tool.
-@mcp.tool()
-def query_document(question: str, similarity_top_k: int = 3) -> str:
-    \"\"\"
-    Query the document index with a given question and optional similarity threshold.
-    \"\"\"
-    class RAGTool:
-        def __init__(self,):
-            self.data_dir = os.path.dirname(__file__)
-            self.persist_dir = os.path.join(self.data_dir, 'storage')
-            
-            storage_context = StorageContext.from_defaults(persist_dir=self.persist_dir)
-            self.index = load_index_from_storage(storage_context)
-            print("Loading existing index...")
-
-        def query(self, question: str, similarity_top_k: int = 3) -> str:
-            query_engine = self.index.as_query_engine(similarity_top_k=similarity_top_k)
-            response = query_engine.query(question)
-            return  ".join([node.node.get_content().strip() for node in response.source_nodes])
-
-    rag_tool = RAGTool()
-    return rag_tool.query(question, similarity_top_k)
-
-print("building mcp server")
-
-if __name__ == "__main__":
-    # Start the MCP server using stdio transport (or choose another transport if needed)
-    mcp.run(transport="stdio")
-        """
-        filepath = os.path.join(data_dir, '.cache/rag_mcp.py')
-        with open(filepath, "w") as file:
-            file.write(retrieval_code)
-        print(f"RAG script saved in {filepath}")
-        return f"successfully save a rag retrieval mcp server code to {filepath}"
-
-
-if __name__ == "__main__":
-    # Instantiate the RAGTool with your data directory
-    tool = RAGTool(data_dir='./')
-    # Sample question and top_k (as a string)
-    question = "summarize the document"
-    response = tool.forward(question, "3")
-    print(response)
-    

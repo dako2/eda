@@ -1,0 +1,7 @@
+- cache_file_directory: /Users/dako22/Documents/GitHub/eda/examples/data/pdf/.cache
+  data_directory: /Users/dako22/Documents/GitHub/eda/examples/data/pdf
+  data_format: ''
+  last_data_update: 1742354754.2234013
+  metadata: {}
+  status: rag_indexed
+  timestamp: '2025-03-18T20:53:11.254642'

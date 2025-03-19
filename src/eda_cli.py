@@ -6,18 +6,21 @@ import os
 import venv
 import sys
 import yaml
+import datetime
+import threading
 
-from smolagents import CodeAgent, ToolCallingAgent, LiteLLMModel
-# Assuming tools are in a 'tools' directory relative to the CLI script
-from tools.tool_rag import RAGTool
+from smolagents import CodeAgent, LiteLLMModel, ToolCallingAgent
+# Tools for data processing
+from tools.tool_rag import RAGTool, load_registry
 from tools.tool_sqlite import SQLiteTool
 from tools.tool_file_writer import FileWriter
 from tools.tool_directory_analyzer import DirectoryAnalyzer
+# Registry management tool (implements update, list, clear)
+from tools.tool_registry_manager import RegistryManager
 
-# Default model
+# Default model and constants
 DEFAULT_MODEL = "xai/grok-2-latest"
 MODEL_ENV_VAR = "EDA_MODEL"
-MODEL_API_KEY_ENV_VAR = "MODEL_API_KEY"
 RAG_CACHE_DIR = ".cache"
 RAG_MCP_SCRIPT_NAME = "rag_mcp.py"
 VENV_NAME = "eda_venv"
@@ -42,9 +45,7 @@ def install_dependencies(venv_path):
     pip_executable = os.path.join(venv_path, 'bin', 'pip')
     if sys.platform == "win32":
         pip_executable = os.path.join(venv_path, 'Scripts', 'pip.exe')
-
     dependencies = ["PyYAML", "smolagents", "llama-index", "llama-index-embeddings-huggingface"]
-
     print("Installing dependencies...")
     try:
         subprocess.check_call([pip_executable, "install"] + dependencies)
@@ -58,75 +59,84 @@ def set_model(model_name):
     os.environ[MODEL_ENV_VAR] = model_name
     print(f"Model set to: {model_name}")
 
-def run_rag(data_directory):
-    """Runs the RAG process for the given data directory."""
-    print(f"Running RAG for data in: {data_directory}")
+def run_rag_all(query: str, similarity_top_k: str = "3") -> str:
+    """
+    Runs the RAG process for the given query on all data directories listed in the registry,
+    and aggregates the outputs.
+    """
+    registry = load_registry()
+    if not registry:
+        return "No registry entries found. Please update the registry first."
 
-    cache_path = os.path.join(data_directory, RAG_CACHE_DIR)
-    os.makedirs(cache_path, exist_ok=True)
-
-    model_name = os.environ.get(MODEL_ENV_VAR, DEFAULT_MODEL)
-
-    model = LiteLLMModel(
-        model_id=model_name,
-        temperature=0.2,
-        #max_tokens=4096,
-    )
-
-    eda_agent = CodeAgent(
-        tools=[RAGTool(), DirectoryAnalyzer()],
-        model=model,
-        name="search",
-        description="explorative data agent",
-        verbosity_level=2,
-    )
-
-    message = f"Build a rag system for the database in {data_directory}"
-    print(f"Running agent with message: '{message}'")
-    eda_agent.run(message)
-    print("RAG process completed.")
+    results = []
+    rag_tool = RAGTool()
+    
+    for entry in registry:
+        data_dir = entry.get("data_directory")
+        if data_dir:
+            output = rag_tool.forward(data_dir, query, similarity_top_k)
+            results.append(f"Results for data directory '{data_dir}':\n{output}\n")
+        else:
+            results.append("Skipping an entry with no valid data_directory.\n")
+    
+    return "\n".join(results)
 
 def run_agent(user_message):
-    """Runs the smolagents with the given user message."""
+    """Runs the smolagents agent with the given user message."""
     print(f"Running agent with message: '{user_message}'")
-
     model_name = os.environ.get(MODEL_ENV_VAR, DEFAULT_MODEL)
+    model = LiteLLMModel(model_id=model_name, temperature=0.2)
 
-    model = LiteLLMModel(
-        model_id=model_name,
-        temperature=0.2,
-        #max_tokens=4096,
-    )
-
-    eda_agent = CodeAgent(
-        tools=[RAGTool(), DirectoryAnalyzer(), SQLiteTool()],
+    eda_agent = ToolCallingAgent(
+        tools=[RAGTool(), RegistryManager()],
         model=model,
         name="eda_agent",
-        description="explorative data agent",
+        description="Explorative data agent",
         verbosity_level=2,
     )
 
     eda_agent.run(user_message)
 
-def run_mcp():
-    """Runs the MCP server using the generated RAG script."""
-    print("Running MCP server...")
-    data_directory = ".." # Assuming the user is in the project root when running this
-    rag_script_path = os.path.join(data_directory, "examples", "data", "pdf", RAG_CACHE_DIR, f"rag_mcp.py") # Adjust path if needed
-
-    if not os.path.exists(rag_script_path):
-        print(f"Error: RAG MCP script not found at {rag_script_path}. Make sure to run 'eda <data_directory>' first.")
+def run_mcp_all(code_directory: str):
+    """
+    Launches the MCP server as a separate process and streams its output.
+    It uses the command: mcp dev mcp_server.py.
+    """
+    mcp_server_script = os.path.join("mcp_server.py")
+    if not os.path.exists(mcp_server_script):
+        print(f"Error: MCP server script not found at {mcp_server_script}.")
         sys.exit(1)
-
+    
+    # Set unbuffered environment variable for the subprocess.
+    env = os.environ.copy()
+    env["PYTHONUNBUFFERED"] = "1"
+    
     try:
-        result = subprocess.run(['mcp', 'dev', rag_script_path], capture_output=True, text=True)
-        print(result.stdout)
-        if result.stderr:
-            print(f"MCP server error:\n{result.stderr}")
-    except FileNotFoundError:
-        print("Error: 'mcp' command not found. Make sure it's installed and in your PATH.")
+        # Correctly separate the command and its arguments.
+        proc = subprocess.Popen(
+            ["mcp", "dev", mcp_server_script],
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            bufsize=1,  # line-buffered
+            text=True,
+            env=env
+        )
+        print("MCP server started as a separate process. Streaming logs below:")
+        
+        # Stream stdout line by line.
+        for line in iter(proc.stdout.readline, ''):
+            print(line, end='')
+        
+        # Optionally, also print stderr lines.
+        for err_line in iter(proc.stderr.readline, ''):
+            print(err_line, end='')
+        
+        proc.stdout.close()
+        proc.stderr.close()
+        proc.wait()
     except Exception as e:
-        print(f"Error running MCP server: {e}")
+        print(f"Error launching MCP server process: {e}")
+
 
 def main():
     parser = argparse.ArgumentParser(description="EDA CLI")
@@ -139,32 +149,58 @@ def main():
     model_parser = subparsers.add_parser("model", help="Set the model to be used")
     model_parser.add_argument("model_name", help="Name of the model (e.g., grok-2-latest)")
 
-    # run rag command
-    rag_parser = subparsers.add_parser("rag", help="Run the RAG process for a given data directory")
-    rag_parser.add_argument("data_directory", help="Path to the data directory")
+    # rag command: now only requires query (registry is loaded to get all data directories)
+    rag_parser = subparsers.add_parser("rag", help="Run the RAG process for all data directories in the registry with a query")
+    rag_parser.add_argument("query", help="Query for the RAG tool")
+    rag_parser.add_argument("--similarity_top_k", default="3",
+                            help="Number of similar docs to retrieve (default: 3)")
+    rag_parser.add_argument("--code_directory", default=os.getcwd(),
+                            help="Path to the code directory (default: current directory)")
+    rag_parser.add_argument("--data_format", default="unknown",
+                            help="Format of the data (e.g., pdf, csv, txt; default: unknown)")
 
-    # run agent with message command
+    # run agent command
     agent_parser = subparsers.add_parser("run", help="Run the agent with a user message")
     agent_parser.add_argument("user_message", nargs='+', help="The message to send to the agent")
 
-    # mcp command
-    mcp_parser = subparsers.add_parser("mcp", help="Run the MCP server")
+    # mcp command: now launches the MCP server as a subprocess
+    mcp_parser = subparsers.add_parser("mcp", help="Start the MCP server as a separate process")
+    mcp_parser.add_argument("--code_directory", default=os.getcwd(),
+                            help="Path to the code directory (default: current directory)")
+
+    # registry command with subcommands (list, clear)
+    registry_parser = subparsers.add_parser("registry", help="Manage the data source registry via RegistryManager")
+    registry_subparsers = registry_parser.add_subparsers(dest="registry_command", help="Registry commands")
+    registry_subparsers.add_parser("list", help="List all data sources in the registry")
+    registry_subparsers.add_parser("clear", help="Clear the data source registry")
 
     args = parser.parse_args()
 
     if args.command == "install":
         venv_path = create_venv()
         install_dependencies(venv_path)
-        print(f"\nRemember to activate the virtual environment before running other commands:\nOn Linux/macOS: source {VENV_NAME}/bin/activate\nOn Windows: .\\{VENV_NAME}\\Scripts\\activate")
+        print(f"\nRemember to activate the virtual environment before running other commands:\n"
+              f"On Linux/macOS: source {VENV_NAME}/bin/activate\nOn Windows: .\\{VENV_NAME}\\Scripts\\activate")
     elif args.command == "model":
         set_model(args.model_name)
     elif args.command == "rag":
-        run_rag(args.data_directory)
+        result = run_rag_all(args.query, args.similarity_top_k)
+        print(result)
+    elif args.command == "mcp":
+        run_mcp_all(args.code_directory)
     elif args.command == "run":
         user_message = " ".join(args.user_message)
         run_agent(user_message)
-    elif args.command == "mcp":
-        run_mcp()
+    elif args.command == "registry":
+        registry_tool = RegistryManager()
+        if args.registry_command == "list":
+            result = registry_tool.forward("list")
+            print(result)
+        elif args.registry_command == "clear":
+            result = registry_tool.forward("clear")
+            print(result)
+        else:
+            print("Please specify a valid registry subcommand (list or clear).")
     else:
         parser.print_help()
 
