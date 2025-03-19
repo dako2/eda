@@ -6,7 +6,7 @@ from eda_cli import run_rag_all  # ensure run_rag_all is importable from here
 mcp = FastMCP("Edge Data Agent")
 
 @mcp.tool()
-def run_mcp(query: str, similarity_top_k: str = "3") -> str:
+def run_rag_mcp(query: str, similarity_top_k: str = "3") -> str:
     """
     Runs the aggregated RAG process for all data directories in the registry.
     """

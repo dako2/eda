@@ -1,6 +1,23 @@
 # MVP toolings
 - smolagents + MCP pathway
 
+# Installation
+pip install llama-index
+pip install llama-index-embeddings-huggingface
+pip install smolagent
+pip install mcp
+pip install PyYAML
+
+cd src
+python setup.py
+pip install -e .
+
+# Usage
+eda run "summarize the data in ../examples/data/pdf"
+eda registry list
+eda rag "the title of the document?"
+eda mcp
+
 # intelligent Edge Data Agent (EDA)
 EDA is an on-premises data analytics solution that leverages state-of-the-art large language model (LLM) code generation to dynamically create a local agent service. Rather than requiring users to upload raw data to cloud platforms, EDA keeps everything local, providing a privacy-preserving and efficient way to interact with and analyze data.
 
