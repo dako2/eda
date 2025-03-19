@@ -108,12 +108,10 @@ def run_agent(user_message):
 
     eda_agent.run(user_message)
 
-    print("Agent execution completed.")
-
 def run_mcp():
     """Runs the MCP server using the generated RAG script."""
     print("Running MCP server...")
-    data_directory = "." # Assuming the user is in the project root when running this
+    data_directory = ".." # Assuming the user is in the project root when running this
     rag_script_path = os.path.join(data_directory, "examples", "data", "pdf", RAG_CACHE_DIR, f"rag_mcp.py") # Adjust path if needed
 
     if not os.path.exists(rag_script_path):
