@@ -1,14 +1,21 @@
 - cache_file_directory: /Users/dako22/Documents/GitHub/eda/examples/data/pdf/.cache
   data_directory: /Users/dako22/Documents/GitHub/eda/examples/data/pdf
-  data_format: ''
-  last_data_update: 1742354754.2234013
-  metadata: {}
-  status: rag_indexed
-  timestamp: '2025-03-18T20:53:11.254642'
+  data_format: pdf
+  last_data_update: 0.0
+  status: rag_indexing
+  timestamp: '2025-03-25T10:48:26.792297'
 - cache_file_directory: /Users/dako22/Documents/GitHub/eda/src/.cache
   data_directory: /Users/dako22/Documents/GitHub/eda/src
   data_format: ''
-  last_data_update: 1742362659.0043101
+  last_data_update: 1742924931.147712
   metadata: {}
   status: rag_indexed
-  timestamp: '2025-03-18T22:37:40.339569'
+  timestamp: '2025-03-25T10:48:56.973636'
+- cache_file_directory: "/Users/dako22/Downloads/AI\u5316\u5B66\u53D1\u5C55\u53F2\u8D44\
+    \u6599/cache/"
+  data_directory: "/Users/dako22/Downloads/AI\u5316\u5B66\u53D1\u5C55\u53F2\u8D44\u6599\
+    /"
+  data_format: docx
+  last_data_update: 1742924999.3727953
+  status: processing
+  timestamp: '2025-03-25T10:50:22.760719'

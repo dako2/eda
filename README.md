@@ -2,14 +2,9 @@
 - smolagents + MCP pathway
 
 # Installation
-pip install llama-index
-pip install llama-index-embeddings-huggingface
-pip install smolagent
-pip install mcp
-pip install PyYAML
-
+python -m venv venv
+source venv/bin/activate
 cd src
-python setup.py
 pip install -e .
 
 # Usage

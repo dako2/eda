@@ -18,6 +18,12 @@ from llama_index.core.llms import MockLLM
 from llama_index.embeddings.huggingface import HuggingFaceEmbedding
 
 # ------------------------------------------------------------------------------
+# Configure LlamaIndex
+# ------------------------------------------------------------------------------
+Settings.llm = MockLLM()
+Settings.embed_model = HuggingFaceEmbedding(model_name="sentence-transformers/all-MiniLM-L6-v2")
+
+# ------------------------------------------------------------------------------
 # Registry utility functions
 # ------------------------------------------------------------------------------
 REGISTRY_FILE = "data_registry.yaml"
@@ -97,12 +103,6 @@ def get_latest_mod_time(data_directory: str) -> float:
             if mtime > latest_time:
                 latest_time = mtime
     return latest_time
-
-# ------------------------------------------------------------------------------
-# Configure LlamaIndex
-# ------------------------------------------------------------------------------
-Settings.llm = MockLLM()
-Settings.embed_model = HuggingFaceEmbedding(model_name="sentence-transformers/all-MiniLM-L6-v2")
 
 # ------------------------------------------------------------------------------
 # RAGTool with data update checks
