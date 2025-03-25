@@ -1,3 +1,4 @@
+*.yaml
 /_not_upload
 .env
 /examples/data/3gpp/
