@@ -3,14 +3,20 @@
 
 # Installation
 python -m venv venv
+
 source venv/bin/activate
+
 cd src
+
 pip install -e .
 
 # Usage
 eda run "summarize the data in ../examples/data/pdf"
+
 eda registry list
+
 eda rag "the title of the document?"
+
 eda mcp
 
 # intelligent Edge Data Agent (EDA)
