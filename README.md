@@ -1,24 +1,3 @@
-# MVP toolings
-- smolagents + MCP pathway
-
-# Installation
-python -m venv venv
-
-source venv/bin/activate
-
-cd src
-
-pip install -e .
-
-# Usage
-eda run "summarize the data in ../examples/data/pdf"
-
-eda registry list
-
-eda rag "the title of the document?"
-
-eda mcp
-
 # intelligent Edge Data Agent (EDA)
 EDA is an on-premises data analytics solution that leverages state-of-the-art large language model (LLM) code generation to dynamically create a local agent service. Rather than requiring users to upload raw data to cloud platforms, EDA keeps everything local, providing a privacy-preserving and efficient way to interact with and analyze data.
 
@@ -42,9 +21,23 @@ Documentation, architecture and demo are initiated – the implementation is on-
 
 [![Watch the demo](https://img.youtube.com/vi/gd279uKtv8U/0.jpg)](https://www.youtube.com/watch?v=gd279uKtv8U)
 
+# MVP toolings
+- smolagents + MCP pathway
 
-Data type 
----
-Process some sensoring data given
-User input: "here is an example of some log file data in my program "log.txt", can you help debug it?"
-EDA response: "can you provide more information about the ?"
+# Installation
+python -m venv venv
+
+source venv/bin/activate
+
+cd src
+
+pip install -e .
+
+# Usage
+eda run "summarize the data in ../examples/data/pdf"
+
+eda registry list
+
+eda rag "the title of the document?"
+
+eda mcp
