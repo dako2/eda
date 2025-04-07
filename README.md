@@ -22,7 +22,7 @@ Documentation, architecture and demo are initiated – the implementation is on-
 [![Watch the demo](https://img.youtube.com/vi/gd279uKtv8U/0.jpg)](https://www.youtube.com/watch?v=gd279uKtv8U)
 
 # MVP toolings
-- smolagents + MCP pathway
+- smolagents framework: read / write files from the local directory, agent for writing up the retrieval code
 
 # Installation
 python -m venv venv
