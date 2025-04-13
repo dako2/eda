@@ -108,17 +108,8 @@ def get_latest_mod_time(data_directory: str) -> float:
 # RAGTool with data update checks
 # ------------------------------------------------------------------------------
 class RAGTool(Tool):
-    """
-    A retrieval-augmented generation (RAG) tool that:
-      1. Checks the registry for an existing entry for 'data_dir'.
-      2. If found, uses 'cache_file_directory' for storing/loading the vector index.
-      3. Compares last-modified time of data_dir to 'last_data_update' in the registry.
-         - If raw data is newer, rebuild the vector index.
-      4. If no entry found, creates a new .cache directory, updates the registry, and builds a new index.
-      5. Then performs a similarity-based query (top_k).
-    """
     name = "rag_tool"
-    description = "A RAG tool that queries a document corpus using a vector index, integrating with the data registry."
+    description = "A RAG tool that queries a document using a vector index, integrating with the data registry."
 
     inputs = {
         "data_dir": {

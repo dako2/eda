@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-
 import argparse
 import subprocess
 import os
@@ -19,7 +18,7 @@ from tools.tool_directory_analyzer import DirectoryAnalyzer
 from tools.tool_registry_manager import RegistryManager
 
 # Default model and constants
-DEFAULT_MODEL = "xai/grok-2-latest"
+DEFAULT_MODEL = "gemini/gemini-pro"
 MODEL_ENV_VAR = "EDA_MODEL"
 RAG_CACHE_DIR = ".cache"
 RAG_MCP_SCRIPT_NAME = "rag_mcp.py"
