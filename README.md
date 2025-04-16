@@ -26,4 +26,4 @@ Currently, we are leveraging smolagents and llamaindex framework: read / write f
 # Assumptions
 1. The accuracy and robustness of LLM code generation improves to human level (SWEBench https://www.swebench.com/)
 2. The cost of autonomous coding goes to negligible
-3. The accuracy can be further improved by local knowledge of the data base and the information of user query history
+3. The accuracy and user experience can be further improved by local/personal knowledge of the data base and the information of user query history
