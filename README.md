@@ -1,6 +1,8 @@
 # Edge Data Agent (EDA)
 EDA is an on-premises data analytics solution by leveraging LLM's code generation capability.
 
+[View PDF Slides](https://drive.google.com/file/d/1T6lkWaYl0h4SdZoKudRBnUrloUD7MUEf/view?usp=sharing)
+
 Rather than requiring users to upload raw data to cloud platforms, EDA keeps everything local, providing a privacy-preserving and efficient way to interact with and analyze data.
 
 EDA converts a user’s own data into a local on-demand agent service by leveraging the latest auto code generation capabilities of LLMs
