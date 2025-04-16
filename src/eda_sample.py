@@ -137,47 +137,40 @@ class FilePreviewer(Tool):
     def forward(self, file_path: str) -> str:
         with open(file_path, "r", encoding="utf-8") as f:
             return f.read(1000)  # limit to first 1k characters
-           
-with open("prompts/custom_agent.yaml", 'r') as stream:
-    prompt_templates = yaml.safe_load(stream)
 
-with open("prompts/data_analysis_agent.yaml", 'r') as stream:
-    data_viewer_prompt_templates = yaml.safe_load(stream)
 
-coder = CodeAgent(
-    name="coding_agent",
-    description="implement the idea into an agent code",
-    tools=[CodeFileWriter()],
-    model=LiteLLMModel(model_id="xai/grok-3-latest")
+def eda_by_smol(task):
+
+    with open("prompts/custom_agent.yaml", 'r') as stream:
+        prompt_templates = yaml.safe_load(stream)
+
+    with open("prompts/data_analysis_agent.yaml", 'r') as stream:
+        data_viewer_prompt_templates = yaml.safe_load(stream)
+
+    coder = CodeAgent(
+        name="coding_agent",
+        description="implement the idea into an agent code",
+        tools=[CodeFileWriter()],
+        model=LiteLLMModel(model_id="xai/grok-3-latest")
+        )
+
+    viewer = ToolCallingAgent(
+        prompt_templates=data_viewer_prompt_templates,
+        name="data_viewer_agent",
+        description="an agent can retrieve or view the file direclty, and return the data schema",
+        tools=[RAGTool(), FilePreviewer()],
+        model=LiteLLMModel(model_id="xai/grok-3-latest")
+        )
+
+    agent = ToolCallingAgent(
+        prompt_templates=prompt_templates,
+        tools=[DirectoryAnalyzer()],
+        model=LiteLLMModel(model_id="xai/grok-3-latest"),#gemini/gemini-1.5-pro
+        #managed_agents=[viewer, coder],
     )
 
-viewer = ToolCallingAgent(
-    prompt_templates=data_viewer_prompt_templates,
-    name="data_viewer_agent",
-    description="an agent can retrieve or view the file direclty, and return the data schema",
-    tools=[RAGTool(), FilePreviewer()],
-    model=LiteLLMModel(model_id="xai/grok-3-latest")
-    )
+    response = agent.run(task)
+    response1 = viewer.run(task +response)
+    response2 = coder.run(task + response1)
 
-agent = ToolCallingAgent(
-    prompt_templates=prompt_templates,
-    tools=[DirectoryAnalyzer()],
-    model=LiteLLMModel(model_id="xai/grok-3-latest"),#gemini/gemini-1.5-pro
-    #managed_agents=[viewer, coder],
-)
-
-
-"""
-The guideline:
-User always know well about the data, but maybe unclearly stating the query, given the data and query, try to build a new smolagent with customized system prompt to answer the question.
-"""
-
-#task = "../sandbox/data/3gpp/ "
-##task = "../sandbox/data/screenshots/  build a data interface tool."
-#task = "../sandbox/data/sensor_data/ check the senory data format. build a data interface tool."
-task = "../sandbox/data/childbook/  build a data interface tool."
-
-response = agent.run(task)
-response1 = viewer.run(task +response)
-response2 = coder.run(task + response1)
-
+    return response2

@@ -1,16 +1,16 @@
 #!/usr/bin/env python3
 import sys
 from mcp.server.fastmcp import FastMCP
-from eda_cli import run_rag_all  # ensure run_rag_all is importable from here
- 
+from run_edge_data_agent import run_edge_data_agent  # ensure run_rag_all is importable from here
+
 mcp = FastMCP("Edge Data Agent")
 
 @mcp.tool()
-def run_rag_mcp(query: str, similarity_top_k: str = "3") -> str:
+def run_rag_mcp(query: str) -> str:
     """
     Runs the aggregated RAG process for all data directories in the registry.
     """
-    return run_rag_all(query, similarity_top_k)
+    return run_edge_data_agent(query)
 
 if __name__ == "__main__":
     # Run the server; this is blocking
