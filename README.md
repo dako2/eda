@@ -1,5 +1,7 @@
-# intelligent Edge Data Agent (EDA)
-EDA is an on-premises data analytics solution that leverages state-of-the-art large language model (LLM) code generation to dynamically create a local agent service. Rather than requiring users to upload raw data to cloud platforms, EDA keeps everything local, providing a privacy-preserving and efficient way to interact with and analyze data.
+# The intelligent Edge Data Agent (EDA)
+EDA is an on-premises data analytics solution by leveraging LLM's code generation capability.
+
+Rather than requiring users to upload raw data to cloud platforms, EDA keeps everything local, providing a privacy-preserving and efficient way to interact with and analyze data.
 
 EDA converts a user’s own data into a local on-demand agent service by leveraging the latest auto code generation capabilities of LLMs
 - Agent code is generated on the fly the first time the user interacts with the database
@@ -21,8 +23,8 @@ Documentation, architecture and demo are initiated – the implementation is on-
 
 [![Watch the demo](https://img.youtube.com/vi/gd279uKtv8U/0.jpg)](https://www.youtube.com/watch?v=gd279uKtv8U)
 
-# MVP toolings
-- smolagents framework: read / write files from the local directory, agent for writing up the retrieval code
+# MVP Reference
+- reference: smolagents framework
 
 # Installation
 python -m venv venv

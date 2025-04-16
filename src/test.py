@@ -3,12 +3,10 @@ pip install llama-index
 pip install llama-index-embeddings-huggingface
 """
 import os
-from smolagents import Tool, ToolCallingAgent, LiteLLMModel, CodeAgent
+from smolagents import ToolCallingAgent, LiteLLMModel, CodeAgent
 import yaml
 
-# ------------------------------------------------------------------------------
-# RAGTool with data update checks
-# ------------------------------------------------------------------------------
+from smolagents import Tool
 
 class RAGTool(Tool):
     name = "rag_tool"
@@ -71,22 +69,26 @@ class RAGTool(Tool):
             output += f"Score:\t{node.score:.3f}\n"
         return output
 
-class CurrentDirectoryAnalyzer(Tool):
+class DirectoryAnalyzer(Tool):
     """
     A SmolAgents tool that analyzes a directory and returns detailed metadata
     including file sizes, types, and counts of files and subdirectories.
     """
     name = "directory_analyzer"
     description = "Analyzes an input directory and returns detailed file and folder info, including file types and sizes."
-    inputs = {}
+    inputs = {
+        "directory_path": {
+            "type": "string",
+            "description": "The path of the directory to analyze."
+        }
+    }
     output_type = "string"
     
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
 
-    def forward(self,) -> str:
+    def forward(self, directory_path: str) -> str:
         from subprocess import check_output, CalledProcessError
-        directory_path = "./"
         try:
             # Use the 'ls' and 'du' commands to gather detailed information
             output = check_output(['ls', '-lR', directory_path], text=True)
@@ -115,11 +117,12 @@ class CodeFileWriter(Tool):
 
     def forward(self, filename: str, scripts: str) -> str:  # Matching `inputs` key
         # Save the generated code to a file
+        filename = "./generated_agent.py" #overwrite filename for now. 
         with open(filename, "w") as file:
             file.write(scripts)  # Writing query as placeholder, may need to adjust logic
 
         return f"Code saved to {filename}."
-        
+
 class FilePreviewer(Tool):
     name = "file_previewer"
     description = "Preview contents of a text file."
@@ -135,28 +138,46 @@ class FilePreviewer(Tool):
         with open(file_path, "r", encoding="utf-8") as f:
             return f.read(1000)  # limit to first 1k characters
            
-with open("prompts/toolcalling_agent.yaml", 'r') as stream:
+with open("prompts/custom_agent.yaml", 'r') as stream:
     prompt_templates = yaml.safe_load(stream)
 
+with open("prompts/data_analysis_agent.yaml", 'r') as stream:
+    data_viewer_prompt_templates = yaml.safe_load(stream)
+
 coder = CodeAgent(
-    name="coding_tools",
-    description="implement the ideas / plans into a code",
+    name="coding_agent",
+    description="implement the idea into an agent code",
     tools=[CodeFileWriter()],
-    model=LiteLLMModel(model_id="gemini/gemini-pro")
+    model=LiteLLMModel(model_id="xai/grok-3-latest")
+    )
+
+viewer = ToolCallingAgent(
+    prompt_templates=data_viewer_prompt_templates,
+    name="data_viewer_agent",
+    description="an agent can retrieve or view the file direclty, and return the data schema",
+    tools=[RAGTool(), FilePreviewer()],
+    model=LiteLLMModel(model_id="xai/grok-3-latest")
     )
 
 agent = ToolCallingAgent(
     prompt_templates=prompt_templates,
-    tools=[RAGTool(), CurrentDirectoryAnalyzer(), FilePreviewer()],
-    model=LiteLLMModel(model_id="gemini/gemini-pro"),
-    managed_agents=[coder],
+    tools=[DirectoryAnalyzer()],
+    model=LiteLLMModel(model_id="xai/grok-3-latest"),#gemini/gemini-1.5-pro
+    #managed_agents=[viewer, coder],
 )
 
-#task = "../sandbox/data/3gpp/ turn local the pdf file into a 3gpp spec agent"
-#task = "../sandbox/data/screenshots/ Turn the screenshot images into text summary"
-##task = "../sandbox/data/ Turn the sensory log data into a sensory data analyzer"
-task = "../sandbox/data/childbook Turn the pdf into a storyteller agent"
+
+"""
+The guideline:
+User always know well about the data, but maybe unclearly stating the query, given the data and query, try to build a new smolagent with customized system prompt to answer the question.
+"""
+
+#task = "../sandbox/data/3gpp/ "
+##task = "../sandbox/data/screenshots/  build a data interface tool."
+#task = "../sandbox/data/sensor_data/ check the senory data format. build a data interface tool."
+task = "../sandbox/data/childbook/  build a data interface tool."
 
 response = agent.run(task)
-print(response)
+response1 = viewer.run(task +response)
+response2 = coder.run(task + response1)
 
