@@ -139,6 +139,7 @@ class FilePreviewer(Tool):
             return f.read(1000)  # limit to first 1k characters
 
 
+# 
 def eda_by_smol(task):
 
     with open("prompts/custom_agent.yaml", 'r') as stream:
@@ -166,7 +167,7 @@ def eda_by_smol(task):
         prompt_templates=prompt_templates,
         tools=[DirectoryAnalyzer()],
         model=LiteLLMModel(model_id="xai/grok-3-latest"),#gemini/gemini-1.5-pro
-        #managed_agents=[viewer, coder],
+        #managed_agents=[viewer, coder], #pipeline may work better
     )
 
     response = agent.run(task)
