@@ -1,0 +1,17 @@
+name: presentation_generation_workflow
+
+description: |
+  Multi-step workflow for generating educational presentations.
+
+steps:
+  - step: extract_key_points
+    description: |
+      Use LLM to extract key knowledge points from the speaker notes.
+
+  - step: image_search
+    description: |
+      Determine if image search is needed based on key points and provide the keywords for google image search.
+
+  - step: design_slides
+    description: |
+      Design slides using key points and images. Output slides.json format. 
