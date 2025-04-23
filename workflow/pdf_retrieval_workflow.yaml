@@ -1,0 +1,17 @@
+name: pdf_retrieval_workflow
+
+description: |
+  Multi-step workflow for generating documentation Q&A retrieval.
+
+steps:
+  - step: extract_metadata
+    description: |
+      Use LLM to extract the file metadata
+
+  - step: retrieve_table_of_contents
+    description: |
+      Use LLM to read table of contents if there is any
+
+  - step: rag_coding
+    description: |
+      Write up the rag code for the document pdf 

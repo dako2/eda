@@ -1,9 +1,0 @@
-name: image_search_workflow
-
-description: |
-  extract image keywords from the speaker notes for google image search
-
-steps:
-  - step: extract_image_search_keywords
-    description: |
-      extract keywords from the speaker notes of each slide which is suitable for google image search
