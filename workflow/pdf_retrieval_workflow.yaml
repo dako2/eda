@@ -4,6 +4,10 @@ description: |
   Multi-step workflow for generating documentation Q&A retrieval.
 
 steps:
+  - step: file_reader
+    description: |
+      Function calling the pdf reader to retrieve text
+
   - step: extract_metadata
     description: |
       Use LLM to extract the file metadata
