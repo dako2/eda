@@ -75,7 +75,7 @@ def run_workflow(workflow_path: str, initial_data_path: str, prompts: dict):
     with open(workflow_path, "r") as f:
         workflow = yaml.safe_load(f)
 
-    data = initial_data
+    data = initial_data_path
 
     for step in workflow["steps"]:
         name = step["step"]
@@ -85,15 +85,7 @@ def run_workflow(workflow_path: str, initial_data_path: str, prompts: dict):
         result = run_llm_step(prompt, data)
         print(f"🔁 Output: {result}")
 
-        try:
-            parsed = json.loads(result)
-            if isinstance(parsed, dict):
-                data.update(parsed)
-        except json.JSONDecodeError as e:
-            print(f"❌ JSON parse error in step {name}: {e}")
-            print(f"🔍 Raw output: {result}")
-
-    return data
+    return result
 
 if __name__ == "__main__":
     workflow_file = "pdf_retrieval_workflow.yaml"
