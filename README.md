@@ -11,9 +11,6 @@ EDA converts a user’s own data into a local on-demand agent service by leverag
 - In contrast to centralized AI platform, the user do not need uploading raw data
 - The goal is to allow users to interact with, digest, or serve their own data on-demand without prior application development
 
-# Installation
-(WIP)
-
 # Sandbox Data
 sandbox/data/ stores the data, agent_card, input for evaluation
 run local_evaluation.py to evaluate the agent performance
