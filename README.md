@@ -24,3 +24,7 @@ Currently, we are leveraging smolagents and llamaindex framework: read / write f
 1. The accuracy and robustness of LLM code generation improves to human level (SWEBench https://www.swebench.com/)
 2. The cost of autonomous coding goes to negligible
 3. The accuracy and user experience can be further improved by local/personal knowledge of the data base and the information of user query history
+
+# Main Branch vs. Working Branch
+Main Branch targets at solving the problem with prompts only with minimum coding. 
+Working branch targets at practical solution as of right now technologies (giving basic rag code example, code functions e.g. writing/reading files, ...)
