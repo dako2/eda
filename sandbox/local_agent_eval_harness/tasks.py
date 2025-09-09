@@ -97,4 +97,82 @@ TASKS = [
         prompt="Evaluate ops_finance.xlsx formulas and return JSON with expected_values for Inputs!D2, Inputs!D3, Summary!B1, Summary!B2.",
         extractor=lambda x: x.get('expected_values', x)
     ),
+
+    # Pack 5 - 3GPP Specification Analysis
+    dict(
+        name="p5_3gpp_rf_requirements",
+        pack_glob="pack5_3gpp",
+        answer_path="answers_3gpp.json",
+        answer_key_path=["rf_requirements"],
+        prompt="Analyze the 3GPP specification PDF and return JSON with key RF requirements, test cases, and UE categories mentioned in the document.",
+        extractor=_id
+    ),
+    dict(
+        name="p5_3gpp_conformance_tests",
+        pack_glob="pack5_3gpp", 
+        answer_path="answers_3gpp.json",
+        answer_key_path=["conformance_tests"],
+        prompt="Extract conformance test information from the 3GPP spec and return JSON with test case IDs, descriptions, and requirements.",
+        extractor=_id
+    ),
+
+    # Pack 6 - Childbook Story Analysis
+    dict(
+        name="p6_childbook_story_elements",
+        pack_glob="pack6_childbook",
+        answer_path="answers_childbook.json", 
+        answer_key_path=["story_elements"],
+        prompt="Read the childbook PDF and return JSON with main characters, plot summary, and key themes of 'Ouma's Amazing Flowers'.",
+        extractor=_id
+    ),
+
+    # Pack 7 - Datasheet Analysis
+    dict(
+        name="p7_esp32_specifications",
+        pack_glob="pack7_datasheets",
+        answer_path="answers_datasheets.json",
+        answer_key_path=["esp32_specs"],
+        prompt="Analyze the ESP32-S3 datasheet and technical reference manual to return JSON with key specifications, pin configurations, and capabilities.",
+        extractor=_id
+    ),
+
+    # Pack 8 - Financial Analysis
+    dict(
+        name="p8_tesla_financial_analysis",
+        pack_glob="pack8_finance",
+        answer_path="answers_finance.json",
+        answer_key_path=["tesla_analysis"],
+        prompt="Compare Tesla's 2023 and 2024 financial reports and return JSON with key metrics, revenue changes, and financial trends.",
+        extractor=_id
+    ),
+
+    # Pack 9 - Medical Notes Analysis
+    dict(
+        name="p9_medical_notes_summary",
+        pack_glob="pack9_notes",
+        answer_path="answers_notes.json",
+        answer_key_path=["medical_summary"],
+        prompt="Analyze the three doctor notes and return JSON with patient conditions, treatments, and key medical information.",
+        extractor=_id
+    ),
+
+    # Pack 10 - Sensor Data Analysis
+    dict(
+        name="p10_sensor_data_analysis",
+        pack_glob="pack10_sensor",
+        answer_path="answers_sensor.json",
+        answer_key_path=["sensor_analysis"],
+        prompt="Process the sensor log data and return JSON with data patterns, anomalies, and key metrics from the sensor readings.",
+        extractor=_id
+    ),
+
+    # Pack 11 - SQL Database Analysis
+    dict(
+        name="p11_receipt_database_analysis",
+        pack_glob="pack11_sql",
+        answer_path="answers_sql.json",
+        answer_key_path=["receipt_analysis"],
+        prompt="Query the receipts database and return JSON with transaction summaries, spending patterns, and key financial insights.",
+        extractor=_id
+    ),
 ]
