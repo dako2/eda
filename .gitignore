@@ -10,3 +10,7 @@ __pycache__/
 build
 /src/tools
 /src/generated_agent.py
+
+sandbox/local_agent_eval_harness/runs/
+sandbox/local_agent_eval_harness/report.json
+sandbox/local_agent_eval_harness/__pycache__/
